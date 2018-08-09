@@ -24,7 +24,7 @@ class instagramDocLister extends onetableDocLister
         $token     = $this->getCFGDef('token');
         $paginate  = $this->getCFGDef('paginate', 0);
         $display   = $this->getCFGDef('display', 10);
-        $cachetime = $this->getCFGDef('cachetime', 172800);
+        $cachetime = $this->getCFGDef('cachetime', 86400);
 
         try {
             $json = file_get_contents($apiurl . 'users/self/?access_token=' . $token);
