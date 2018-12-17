@@ -10,6 +10,7 @@
 */
 //<?php
 
+require_once MODX_BASE_PATH . 'assets/snippets/DocLister/core/DocLister.abstract.php';
 require_once MODX_BASE_PATH . 'assets/snippets/DocLister/core/controller/onetable.php';
 
 if (empty($params['token'])) {
