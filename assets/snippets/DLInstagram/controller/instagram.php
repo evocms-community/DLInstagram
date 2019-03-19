@@ -26,41 +26,41 @@ class instagramDocLister extends onetableDocLister
         $display   = $this->getCFGDef('display', 10);
         $cachetime = $this->getCFGDef('cachetime', 86400);
 
-        try {
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $apiurl . 'users/self/?access_token=' . $token);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-            $result = curl_exec($ch);
-            $code   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            curl_close($ch);
-
-            $json = json_decode($result, true);
-
-            if ($code != 200) {
-                if (!empty($json)) {
-                    throw new Exception('code ' . $code . '<br><pre>' . print_r($json, true) . '</pre>');
-                }
-
-                throw new Exception('code ' . $code);
-            }
-
-            if (empty($json['data'])) {
-                throw new Exception('Data section is empty!<br><pre>' . print_r($json, true) . '</pre>');
-            }
-        } catch (Exception $e) {
-            $this->modx->logEvent(0, 3, 'User request failed: ' . $e->getMessage(), 'DLInstagram');
-            return [];
-        }
-
-        $user = $json['data'];
-
-        $cachename = $cachedir . '/' . $user['username'] . '_' . md5(serialize([$token, $display, $paginate])) . '.json';
+        $cachename = $cachedir . '/' . md5(serialize([$token, $display, $paginate])) . '.json';
         $url = $apiurl . 'users/self/media/recent?access_token=' . $token;
 // TODO: pagination
         if (file_exists($cachename) && filemtime($cachename) + $cachetime > time()) {
             $data = json_decode(file_get_contents($cachename), true);
         } else {
             $data = [];
+
+            try {
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $apiurl . 'users/self/?access_token=' . $token);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                $result = curl_exec($ch);
+                $code   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+
+                $json = json_decode($result, true);
+
+                if ($code != 200) {
+                    if (!empty($json)) {
+                        throw new Exception('code ' . $code . '<br><pre>' . print_r($json, true) . '</pre>');
+                    }
+
+                    throw new Exception('code ' . $code);
+                }
+
+                if (empty($json['data'])) {
+                    throw new Exception('Data section is empty!<br><pre>' . print_r($json, true) . '</pre>');
+                }
+            } catch (Exception $e) {
+                $this->modx->logEvent(0, 3, 'User request failed: ' . $e->getMessage(), 'DLInstagram');
+                return [];
+            }
+
+            $user = $json['data'];
 
             do {
                 try {
