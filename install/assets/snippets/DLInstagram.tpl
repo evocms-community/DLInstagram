@@ -4,7 +4,7 @@
  * DLInstagram
  * 
  * @category    snippet
- * @version     0.1
+ * @version     0.2.0
  * @internal    @modx_category Content
 
 */
