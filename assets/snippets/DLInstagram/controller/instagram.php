@@ -77,9 +77,12 @@ class instagramDocLister extends onetableDocLister
 
                 $data['images'] = array_merge($data['images'], $json['data']);
 
-                if (count($data['images']) < $needCount && !empty($json['pagination']['next_url'])) {
+                if (!empty($json['pagination']['next_url'])) {
                     $data['next_url'] = $url = $json['pagination']['next_url'];
-                    continue;
+
+                    if (count($data['images']) < $needCount) {
+                        continue;
+                    }
                 }
 
                 break;
