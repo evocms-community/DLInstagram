@@ -18,10 +18,10 @@ if (empty($params['token'])) {
 }
 
 return $modx->runSnippet('DocLister', array_merge([
-    'tpl'        => '@CODE: <li><a href="[+link+]" target="_blank" rel="nofollow"><img src="[+images.standard_resolution.url+]" alt="[+e.caption.text+]"></a>',
+    'tpl'        => '@CODE: <li><a href="[+url+]" target="_blank" rel="nofollow"><img src="[+image+]" alt="[+e.caption+]"></a>',
     'ownerTPL'   => '@CODE: <ul>[+wrap+]</ul>',
-    'dateSource' => 'created_time',
-    'e'          => 'caption.text',
+    'dateSource' => 'timestamp',
+    'e'          => 'caption',
 ], $params, [
     'controller' => 'instagram',
     'dir'        => 'assets/snippets/DLInstagram/controller/',

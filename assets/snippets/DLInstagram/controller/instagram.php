@@ -2,22 +2,20 @@
 
 class instagramDocLister extends onetableDocLister
 {
-    protected $data = [];
-    protected $apiUrl = 'https://api.instagram.com/v1/';
-    protected $cacheDir;
+    protected $data      = [];
+    protected $apiUrl    = 'https://graph.instagram.com/';
+    protected $imagesDir = 'assets/images/instagram';
     protected $token;
     protected $cacheName;
 
     public function getDocs($tvlist = '')
     {
-        $this->cacheDir = MODX_BASE_PATH . 'assets/cache/instagram';
-
-        if (!is_dir($this->cacheDir)) {
-            mkdir($this->cacheDir, 0744, true);
+        if (!is_dir(MODX_BASE_PATH . $this->imagesDir)) {
+            mkdir(MODX_BASE_PATH . $this->imagesDir, 0744, true);
         }
 
         $this->token = $this->getCFGDef('token');
-        $this->cacheName = $this->cacheDir . '/' . md5($this->token) . '.json';
+        $this->cacheName = MODX_BASE_PATH . 'assets/cache/instagram.' . md5($this->token) . '.json.pageCache.php';
 
         if ($this->extPaginate = $this->getExtender('paginate')) {
             $this->extPaginate->init($this);
@@ -39,13 +37,13 @@ class instagramDocLister extends onetableDocLister
 
         $data = $this->getProfileData();
 
-        $needCount = min($page * $display, $data['user']['counts']['media']);
+        $needCount = min($page * $display, $data['user']['media_count']);
 
         if (count($data['images']) < $needCount) {
             if (!empty($data['next_url'])) {
                 $url = $data['next_url'];
             } else {
-                $url = $this->apiUrl . 'users/self/media/recent?access_token=' . $this->token;
+                $url = $this->apiUrl . $data['user']['id'] . '/media?fields=' . $this->getCFGDef('fetchMediaFields', 'caption,media_type,media_url,permalink,thumbnail_url,timestamp') . '&access_token=' . $this->token;
             }
 
             do {
@@ -75,10 +73,30 @@ class instagramDocLister extends onetableDocLister
                     return [];
                 }
 
+                foreach ($json['data'] as &$media) {
+                    $media['timestamp'] = strtotime($media['timestamp']);
+                    $media['url']   = $media['permalink'];
+                    $media['image'] = $this->imagesDir . '/' . $media['id'] . '.jpg';
+                    $imageLocal     = MODX_BASE_PATH . $media['image'];
+
+                    if (!is_readable($imageLocal)) {
+                        if ($media['media_type'] == 'VIDEO') {
+                            $imageUrl = $media['thumbnail_url'];
+                        } else {
+                            $imageUrl = $media['media_url'];
+                        }
+
+                        $raw = file_get_contents($imageUrl);
+                        file_put_contents($imageLocal, $raw);
+                    }
+                }
+
+                unset($media);
+
                 $data['images'] = array_merge($data['images'], $json['data']);
 
-                if (!empty($json['pagination']['next_url'])) {
-                    $data['next_url'] = $url = $json['pagination']['next_url'];
+                if (!empty($json['paging']['next'])) {
+                    $data['next_url'] = $url = $json['paging']['next'];
 
                     if (count($data['images']) < $needCount) {
                         continue;
@@ -102,7 +120,7 @@ class instagramDocLister extends onetableDocLister
         }
 
         $data = [
-            'user'      => [],
+            'user'      => null,
             'images'    => [],
             'timestamp' => (new DateTime())->getTimestamp(),
         ];
@@ -129,7 +147,7 @@ class instagramDocLister extends onetableDocLister
     {
         try {
             $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $this->apiUrl . 'users/self/?access_token=' . $this->token);
+            curl_setopt($ch, CURLOPT_URL, $this->apiUrl . 'me?fields=' . $this->getCFGDef('fetchUserFields', 'id,media_count,username') . '&access_token=' . $this->token);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
             $result = curl_exec($ch);
             $code   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -145,21 +163,21 @@ class instagramDocLister extends onetableDocLister
                 throw new Exception('code ' . $code);
             }
 
-            if (empty($json['data'])) {
-                throw new Exception('Data section is empty!<br><pre>' . htmlentities(print_r($json, true)) . '</pre>');
+            if (empty($json['id'])) {
+                throw new Exception('User id is empty!<br><pre>' . htmlentities(print_r($json, true)) . '</pre>');
             }
         } catch (Exception $e) {
             $this->modx->logEvent(0, 3, 'User request failed: ' . $e->getMessage(), 'DLInstagram');
             return [];
         }
 
-        return $json['data'];
+        return $json;
     }
 
     public function getChildrenCount()
     {
         $data = $this->getProfileData();
-        return $data['user']['counts']['media'];
+        return $data['user']['media_count'];
     }
 
     public function getChildrenFolder($id)
