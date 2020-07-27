@@ -69,7 +69,7 @@ class instagramDocLister extends onetableDocLister
                         throw new Exception('Data section is empty!<br><pre>' . htmlentities(print_r($json, true)) . '</pre>');
                     }
                 } catch (\Exception $e) {
-                    $this->modx->logEvent(0, 3, 'Data request failed: ' . $e->getMessage(), 'DLInstagram');
+                    $this->modx->logEvent(0, 3, 'Data request failed<br>' . $url . '<br>' . $e->getMessage(), 'DLInstagram');
                     return [];
                 }
 
@@ -145,9 +145,11 @@ class instagramDocLister extends onetableDocLister
 
     protected function loadUserInfo()
     {
+        $url = $this->apiUrl . 'me?fields=' . $this->getCFGDef('fetchUserFields', 'id,media_count,username') . '&access_token=' . $this->token;
+
         try {
             $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $this->apiUrl . 'me?fields=' . $this->getCFGDef('fetchUserFields', 'id,media_count,username') . '&access_token=' . $this->token);
+            curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
             $result = curl_exec($ch);
             $code   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -167,7 +169,7 @@ class instagramDocLister extends onetableDocLister
                 throw new Exception('User id is empty!<br><pre>' . htmlentities(print_r($json, true)) . '</pre>');
             }
         } catch (Exception $e) {
-            $this->modx->logEvent(0, 3, 'User request failed: ' . $e->getMessage(), 'DLInstagram');
+            $this->modx->logEvent(0, 3, 'User request failed<br>' . $url . '<br>' . $e->getMessage(), 'DLInstagram');
             return [];
         }
 
