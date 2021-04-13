@@ -207,6 +207,10 @@ class Manager
     public function getUserInfo()
     {
         try {
+            if (empty($this->token)) {
+                throw new Exception('Token empty');
+            }
+
             $json = $this->loadUserInfo($this->apiUrl . 'me?' . http_build_query([
                 'fields' => $this->params['fetchUserFields'],
                 'access_token' => $this->token,
@@ -237,6 +241,10 @@ class Manager
 
             do {
                 try {
+                    if (empty($this->token)) {
+                        throw new Exception('Token empty');
+                    }
+
                     $json = $this->loadMedia($url);
                 } catch (\Exception $e) {
                     $this->modx->logEvent(0, 3, 'Data request failed: ' . $e->getMessage(), 'DLInstagram');
