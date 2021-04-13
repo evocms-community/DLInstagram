@@ -144,7 +144,7 @@ class Manager
             ], $table);
         }
 
-        $this->modx->config['setting'] = $value;
+        $this->modx->config[$setting] = $value;
     }
 
     public function isTokenInvalid()
