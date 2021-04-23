@@ -12,11 +12,19 @@ class InstagramDocLister extends onetableDocLister
 
     public function render($tpl = '')
     {
+        if ($this->modx->instagram->isTokenInvalid()) {
+            return '';
+        }
+
         return parent::render($tpl);
     }
 
     public function getDocs($tvlist = '')
     {
+        if ($this->modx->instagram->isTokenInvalid()) {
+            return [];
+        }
+
         if ($this->extPaginate = $this->getExtender('paginate')) {
             $this->extPaginate->init($this);
         }
@@ -40,6 +48,10 @@ class InstagramDocLister extends onetableDocLister
 
     public function getChildrenCount()
     {
+        if ($this->modx->instagram->isTokenInvalid()) {
+            return 0;
+        }
+
         $data = $this->modx->instagram->getProfileData();
         return $data['user']['media_count'];
     }
